@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOCUS AI | Визуальный профиль кампуса</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 31, 48, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(139, 92, 246, 0.12) 0%, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 45px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container { width: 100%; max-width: 1100px; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        .badge {
+            display: inline-block;
+            padding: 5px 14px;
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            color: #60a5fa;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        h1 { font-size: 2.3rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-muted); font-size: 1rem; }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 8px;
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            margin-bottom: 35px;
+        }
+
+        .search-container input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 12px 16px;
+            font-size: 1.05rem;
+            color: var(--text-main);
+        }
+        .search-container input::placeholder { color: #64748b; }
+
+        .search-container button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .search-container button:hover { background: var(--accent-hover); }
+
+        .loader { display: none; text-align: center; margin: 40px 0; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .results { display: none; }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+        @media (max-width: 768px) { .info-grid { grid-template-columns: 1fr; } }
+
+        .info-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            backdrop-filter: blur(10px);
+        }
+        .info-card h3 {
+            font-size: 1.15rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-pulse h3 { color: #93c5fd; }
+        .card-history h3 { color: #fbcfe8; }
+        .info-card p {
+            color: #e2e8f0;
+            line-height: 1.65;
+            font-size: 0.98rem;
+        }
+
+        .gallery-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            color: #f1f5f9;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 18px;
+        }
+
+        .photo-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .photo-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        .photo-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: #1e293b;
+        }
+        .photo-meta { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+        .photo-tag {
+            align-self: flex-start;
+            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            color: #38bdf8;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .photo-title {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            line-height: 1.35;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="badge">Locus Campus Pulse</div>
+        <h1>Визуальный профиль университета</h1>
+        <p class="subtitle">AI-анализ студенческой среды, история и галерея кампуса</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="uniInput" placeholder="Введите университет (например: NU, Harvard, КБТУ, Oxford, MIT)...">
+        <button id="searchBtn" onclick="analyzeCampus()">Анализировать</button>
+    </div>
+
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <p style="color: var(--text-muted);">ИИ формирует сводку и загружает галерею кампуса...</p>
+    </div>
+
+    <div class="results" id="results">
+        <div class="info-grid">
+            <div class="info-card card-pulse">
+                <h3>✦ Студенческая среда и кампус</h3>
+                <p id="aiAtmosphere"></p>
+            </div>
+            <div class="info-card card-history">
+                <h3>🏛 История и наследие</h3>
+                <p id="aiHistory"></p>
+            </div>
+        </div>
+
+        <div class="gallery-header">Галерея кампуса</div>
+        <div class="gallery-grid" id="photoGallery"></div>
+    </div>
+</div>
+
+<script>
+    async function analyzeCampus() {
+        const input = document.getElementById('uniInput');
+        const query = input.value.trim();
+        if (!query) return;
+
+        const btn = document.getElementById('searchBtn');
+        const loader = document.getElementById('loader');
+        const results = document.getElementById('results');
+        const atmosphereEl = document.getElementById('aiAtmosphere');
+        const historyEl = document.getElementById('aiHistory');
+        const gallery = document.getElementById('photoGallery');
+
+        btn.disabled = true;
+        loader.style.display = 'block';
+        results.style.display = 'none';
+        gallery.innerHTML = '';
+
+        try {
+            const res = await fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ university: query })
+            });
+
+            const data = await res.json();
+            atmosphereEl.innerText = data.atmosphere || "Информация формируется.";
+            historyEl.innerText = data.history || "Историческая справка готовится.";
+
+            if (data.images && data.images.length > 0) {
+                data.images.forEach(img => {
+                    const card = document.createElement('div');
+                    card.className = 'photo-card';
+                    card.innerHTML = `
+                        <img src="${img.url}" alt="${img.title}" onerror="this.src='https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=600&q=80'">
+                        <div class="photo-meta">
+                            <span class="photo-tag">${img.category}</span>
+                            <div class="photo-title">${img.title}</div>
+                        </div>
+                    `;
+                    gallery.appendChild(card);
+                });
+            } else {
+                gallery.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1;">Фотографий не найдено.</p>';
+            }
+
+            results.style.display = 'block';
+        } catch (err) {
+            alert('Ошибка: ' + err.message);
+        } finally {
+            loader.style.display = 'none';
+            btn.disabled = false;
+        }
+    }
+
+    document.getElementById('uniInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') analyzeCampus();
+    });
+</script>
+
+</body>
+</html>
